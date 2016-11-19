@@ -2,10 +2,13 @@ class Game {
 	constructor(parent) {
 		this.parent = parent;
 		this.buildSVG();
+		this.buildButtons();
 
-		this.ball = new Ball(this.svg, 0, 0, 40, 'white');
+		this.ball = new Ball(this.svg, 'white', 30, 30, 10);
 
-		//this.start();
+		this.initiated = false;
+
+		this.start();
 	}
 
 	buildSVG() {
@@ -16,47 +19,45 @@ class Game {
 		this.parent.appendChild(this.svg);
 	}
 
+	buildButtons() {
+		this.startButton = document.createElement('button');
+		this.startButton.appendChild(document.createTextNode('Start'));
+		this.startButton.addEventListener('click', () => this.start());
+		this.parent.appendChild(this.startButton);
+
+		this.stopButton = document.createElement('button');
+		this.stopButton.appendChild(document.createTextNode('Stop'));
+		this.stopButton.addEventListener('click', () => this.stop());
+		this.parent.appendChild(this.stopButton);
+	}
+
 	start() {
-		this.interval.setInterval( () => {
-			this.detectCollision();
-		}, 10);
-		// Detectar colisiones
-		// Dibujar objetos en nueva posición
+		if (!this.initiated) {
+			this.initiated = true;
+			this.interval = setInterval( () => {
+				this.ball.move();
+				//this.detectCollision();
+			}, 10);
+			// Detectar colisiones
+			// Dibujar objetos en nueva posición
+		}
 	}
 
 	stop() {
-		clearInterval(this.interval);
+		if (!!this.initiated) {
+			this.initiated = false;
+			clearInterval(this.interval);
+		}
 	}
 
 }
 
 
-class Vector2D {
-	contructor(x, y) {
+class Position {
+	constructor(element, x, y) {
+		this.element = element;
 		this.x = x;
 		this.y = y;
-	}
-
-}
-
-class GameElement {
-	constructor(graphic, color, x, y, element='polygon') {
-		this.graphic = graphic;
-
-		this.buildElem(color, element);
-
-		this.x = x;
-		this.y = y;
-	}
-
-	buildElem(color, element='polygon') {
-		this.createElem(element);
-		this.element.setAttribute('fill', color);
-		this.graphic.appendChild(this.element);
-	}
-
-	createElem(element) {
-		this.element = document.createElementNS('http://www.w3.org/2000/svg', element);
 	}
 
 	set x(x) {
@@ -64,11 +65,76 @@ class GameElement {
 	}
 
 	get x() {
-
+		return this.element.cx.animVal.value;
 	}
 
 	set y(y) {
 		this.element.setAttribute('cy', y);
+	}
+
+	get y() {
+		return this.element.cy.animVal.value;
+	}
+
+	increase(x, y) {
+		this.x += x;
+		this.y += y;
+	}
+}
+
+class Velocity {
+	constructor(element, speed=0, angle=0) {
+		this.element = element;
+		this.speed = speed;
+		this.angle = angle;
+	}
+
+	get x() {
+		return this.speed * Math.cos(this.angle);
+	}
+
+	get y() {
+		return this.speed * Math.sin(this.angle);
+	}
+
+	set vel(vel) {
+		this.speed = Math.hypot(vel.x, vel.y);
+		this.angle = Math.atan2(vel.y, vel.x);
+	}
+
+	get vel() {
+		return {'x': this.x, 'y': this.y};
+	}
+
+}
+
+class GameElement {
+	constructor(graphic, color, x, y, type='polygon') {
+		this.graphic = graphic;
+
+		this.buildElem(color, type);
+
+		this.position = new Position(this.element, x, y);
+		this.velocity = new Velocity(this.element);
+	}
+
+	buildElem(color, type='polygon') {
+		this.element = document.createElementNS('http://www.w3.org/2000/svg', type);
+		this.element.setAttribute('fill', color);
+		this.graphic.appendChild(this.element);
+	}
+
+	set r(r) {
+		this.element.setAttribute('r', r);
+	}
+
+	get r() {
+		return this.element.r.animVal.value;
+	}
+
+	move() {
+		let vel = this.velocity.vel;
+		this.position.increase(vel.x, vel.y);
 	}
 
 }
@@ -76,7 +142,7 @@ class GameElement {
 
 class Ball extends GameElement {
 	constructor(graphic, color, x, y, r) {
-		super(graphic, color, x, y);
+		super(graphic, color, x, y, 'circle');
 		this.r = r;
 	}
 	
