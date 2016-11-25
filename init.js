@@ -1,3 +1,3 @@
 window.onload = function(){
-	controller = new GameCtrl(800, 600);
+	controller = new GameCtrl(480, 620);
 };

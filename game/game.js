@@ -10,14 +10,67 @@ class Game {
 		var initialAngle = Math.random() * Math.PI/2 + 5*Math.PI/4; 
 		this.ball = new Ball(this, this.width / 2, this.height - 50, 10, 2, initialAngle);
 		this.bar = new Bar(this, 200, 20, 20);
-		this.bricks = [
-			new Brick(this, 50, 30, 50, 30, 1),
-			new Brick(this, 110, 30, 50, 30, 2),
-			new Brick(this, 170, 30, 50, 30, -1),
-			new Brick(this, 230, 30, 50, 30, 4),
-			new Brick(this, 290, 30, 50, 30, 5),
-			// TODO
-		];
+
+		var brickWidth = 40;
+		var brickHeight = 20;
+		var bricksLevel = [];
+		bricksLevel.push(
+			[0, 3, 4],
+			[0, 8, 4],
+			[1, 3, 4],
+			[1, 8, 4],
+			[2, 4, 2],
+			[2, 7, 2],
+			[3, 4, 2],
+			[3, 7, 2]
+		);
+		for (let i = 4; i <= 5; i++) {
+			for (let j = 3; j <= 8; j++) {
+				bricksLevel.push([i, j, 2]);
+			}
+		}
+		for (let i = 6; i <= 7; i++) {
+			for (let j = 2; j <= 9; j++) {
+				if (j == 4 || j == 7) {
+					bricksLevel.push([i, j, -1]);
+				} else {
+					bricksLevel.push([i, j, 2]);
+				}
+			}
+		}
+		for (let i = 8; i <= 10; i++) {
+			for (let j = 1; j <= 10; j++) {
+				bricksLevel.push([i, j, 2]);
+			}
+		}
+		for (let i = 11; i <= 13; i++) {
+			bricksLevel.push(
+				[i, 1, 2],
+				[i, 3, 1],
+				[i, 8, 1],
+				[i, 10, 2]
+			);
+		}
+		for (let j = 4; j <= 7; j++) {
+			bricksLevel.push([11, j, 1]);
+		}
+		bricksLevel.push(
+			[14, 4, 1],
+			[14, 7, 1],
+			[15, 4, 1],
+			[15, 7, 1]
+		);
+
+		this.bricks = bricksLevel.map(elem =>
+			new Brick(
+				this,
+				this.width / 2 + (-6 + elem[1]) * brickWidth,
+				elem[0] * brickHeight,
+				brickWidth,
+				brickHeight,
+				elem[2]
+				)
+			);
 
 		return {ball: this.ball, bar: this.bar, bricks: this.bricks};
 	}
