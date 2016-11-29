@@ -280,35 +280,52 @@ function setNewDirection(ball, coll, rect, sides) {
 	if (rect instanceof Wall) {
 		ang = Math.PI;
 	}
-	// Corners
-	if (sides.BOTTOM.collision && sides.RIGHT.collision) {
-		ball.vel.angle = Math.random() * Math.PI/4 + Math.PI/8 + ang; 
+
+	if (rect instanceof Bar) {
+		var bar = rect;
+		var varAng = (Math.random() - 0.5) * Math.PI/16;
+		if (sides.TOP.collision && sides.LEFT.collision) {
+			ball.vel.angle = 7*Math.PI/6 + varAng; 
+		}
+		else if (sides.TOP.collision && sides.RIGHT.collision) {
+			ball.vel.angle = 11*Math.PI/6 + varAng; 
+		}
+		else if (sides.TOP.collision) {
+			ball.pos.y = sides.TOP.newY;
+			ball.vel.angle = 2*Math.PI/3 * (ball.pos.x - bar.pos.x) / (bar.width) + 7*Math.PI/6 + varAng;
+		}
 	}
-	else if (sides.BOTTOM.collision && sides.LEFT.collision) {
-		ball.vel.angle = Math.random() * Math.PI/4 + 5*Math.PI/8 + ang; 
-	}
-	else if (sides.TOP.collision && sides.LEFT.collision) {
-		ball.vel.angle = Math.random() * Math.PI/4 + 9*Math.PI/8 + ang; 
-	}
-	else if (sides.TOP.collision && sides.RIGHT.collision) {
-		ball.vel.angle = Math.random() * Math.PI/4 + 13*Math.PI/8 + ang; 
-	}
-	// Sides
-	else if (sides.TOP.collision) {
-		ball.pos.y = sides.TOP.newY;
-		ball.vel.changeY();
-	}
-	else if (sides.BOTTOM.collision) {
-		ball.pos.y = sides.BOTTOM.newY;
-		ball.vel.changeY();
-	}
-	else if (sides.RIGHT.collision) {
-		ball.pos.x = sides.RIGHT.newX;
-		ball.vel.changeX();
-	}
-	else if (sides.LEFT.collision) {
-		ball.pos.x = sides.LEFT.newX;
-		ball.vel.changeX();
+	else {
+		// Corners
+		if (sides.BOTTOM.collision && sides.RIGHT.collision) {
+			ball.vel.angle = Math.random() * Math.PI/4 + Math.PI/8 + ang; 
+		}
+		else if (sides.BOTTOM.collision && sides.LEFT.collision) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 5*Math.PI/8 + ang; 
+		}
+		else if (sides.TOP.collision && sides.LEFT.collision) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 9*Math.PI/8 + ang; 
+		}
+		else if (sides.TOP.collision && sides.RIGHT.collision) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 13*Math.PI/8 + ang; 
+		}
+		// Sides
+		else if (sides.TOP.collision) {
+			ball.pos.y = sides.TOP.newY;
+			ball.vel.changeY();
+		}
+		else if (sides.BOTTOM.collision) {
+			ball.pos.y = sides.BOTTOM.newY;
+			ball.vel.changeY();
+		}
+		else if (sides.RIGHT.collision) {
+			ball.pos.x = sides.RIGHT.newX;
+			ball.vel.changeX();
+		}
+		else if (sides.LEFT.collision) {
+			ball.pos.x = sides.LEFT.newX;
+			ball.vel.changeX();
+		}
 	}
 }
 
