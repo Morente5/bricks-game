@@ -331,11 +331,17 @@ class Bar extends Rectangle{
 	moveRight() {
 		this.vel.angle = 0;
 		this.move();
+		if (this.pos.x > this.game.width - this.width) {
+			this.pos.x = this.game.width - this.width;
+		}
 	}
 
 	moveLeft() {
 		this.vel.angle = Math.PI;
 		this.move();
+		if (this.pos.x < 0) {
+			this.pos.x = 0;
+		}
 	}
 
 }
