@@ -9,7 +9,7 @@ class Game {
 	createElements() {
 		var initialAngle = Math.random() * Math.PI/2 + 5*Math.PI/4; 
 		this.ball = new Ball(this, this.width / 2, this.height - 50, 10, 2, initialAngle);
-		this.bar = new Bar(this, 200, 20, 20);
+		this.bar = new Bar(this, 120, 20, 5);
 
 		var brickWidth = 40;
 		var brickHeight = 20;
@@ -343,21 +343,32 @@ class Rectangle extends GameElement {
 class Bar extends Rectangle{
 	constructor(game, width, height, speed) {
 		super(game, (game.width-width)/2, game.height-height-10, width, height, speed, 0);
+		this.moving = false;
 	}
 
 	moveRight() {
+		this.moving = true;
 		this.vel.angle = 0;
-		this.move();
-		if (this.pos.x > this.game.width - this.width) {
-			this.pos.x = this.game.width - this.width;
-		}
 	}
 
 	moveLeft() {
+		this.moving = true;
 		this.vel.angle = Math.PI;
-		this.move();
-		if (this.pos.x < 0) {
-			this.pos.x = 0;
+	}
+
+	stop() {
+		this.moving = false;
+	}
+
+	move() {
+		if (!!this.moving) {
+			super.move();
+			if (this.pos.x > this.game.width - this.width) {
+				this.pos.x = this.game.width - this.width;
+			}
+			if (this.pos.x < 0) {
+				this.pos.x = 0;
+			}
 		}
 	}
 

@@ -1,14 +1,21 @@
 class GameCtrl {
 	constructor(width, height) {
-		this.game = new Game(width, height);
-		this.view = new View(this, width, height);
+		this.width = width;
+		this.height = height;
+
+		this.loadGame();
+		this.loadEvents();
+	}
+
+	loadGame() {
+		if (!!this.view) {
+			this.view.delete();
+		}
+		this.game = new Game(this.width, this.height);
+		this.view = new View(this, this.width, this.height);
 
 		this.createElementCtrls();
-
-		this.running = false;
-
-		this.loadEvents();
-
+		this.stop();
 	}
 
 	createElementCtrls() {
@@ -32,6 +39,14 @@ class GameCtrl {
 					break;
 			} 
 		});
+		window.addEventListener("keyup", event => {
+			switch(event.key) {
+				case 'ArrowLeft':
+				case 'ArrowRight':
+					this.barCtrl.stop();
+					break;
+			} 
+		});
 	}
 
 	start() {
@@ -40,6 +55,7 @@ class GameCtrl {
 			
 			this.interval = setInterval( () => {
 				this.ballCtrl.move();
+				this.barCtrl.move();
 				this.game.detectAllCollisions();
 				this.brickCtrl.update();
 			}, 5);
@@ -113,13 +129,16 @@ class BarCtrl extends GameElementCtrl {
 
 	moveRight() {
 		this.gameElement.moveRight();
-		this.setPosition();
 	}
 
 	moveLeft() {
 		this.gameElement.moveLeft();
-		this.setPosition();
 	}
+
+	stop() {
+		this.gameElement.stop();
+	}
+
 }
 
 class BrickCtrl extends GameElementCtrl {

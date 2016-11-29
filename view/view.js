@@ -7,6 +7,10 @@ class View {
 		this.container = document.getElementById('container');
 		this.svg = new SVGGraphic(this.gameCtrl, this.container, '#1E262C', width, height);
 	}
+
+	delete() {
+		this.svg.parent.removeChild(this.svg.graphic);
+	}
 }
 
 
