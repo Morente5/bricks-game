@@ -47,6 +47,15 @@ class GameCtrl {
 					break;
 			} 
 		});
+		this.view.container.addEventListener("touchstart", event => {
+			this.start();	
+  			event.preventDefault();
+  			this.barCtrl.movePosition(event.changedTouches[0].pageX - this.barCtrl.gameElement.width/2);
+		}, false);
+  		this.view.container.addEventListener("touchmove", event => {
+  			event.preventDefault();
+  			this.barCtrl.movePosition(event.changedTouches[0].pageX - this.barCtrl.gameElement.width/2);
+		}, false);
 	}
 
 	start() {
@@ -124,6 +133,19 @@ class BarCtrl extends GameElementCtrl {
 
 		this.SVGElement = new SVGRectangle(gameCtrl, 'white', x, y, width, height);
 
+		this.setPosition();
+	}
+
+	movePosition(x) {
+		if (this.gameElement.pos.x > this.gameCtrl.width - this.gameElement.width) {
+			this.gameElement.pos.x = this.gameCtrl.width - this.gameElement.width;
+		}
+		else if (this.gameElement.pos.x < 0) {
+			this.gameElement.pos.x = 0;
+		}
+		else {
+			this.gameElement.pos.x = x;
+		}
 		this.setPosition();
 	}
 
