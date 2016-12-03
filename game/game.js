@@ -59,9 +59,9 @@ class Game {
 	}
 
 	checkWin() {
-		if (this.bricksLevel.every(elem => elem.level > 0)) {
+		if (this.bricksLevel.every(elem => elem.level <= 0)) {
 			this.win = true;
-		};
+		}
 	}
 
 }
