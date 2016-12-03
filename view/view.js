@@ -124,3 +124,32 @@ class SVGRectangle extends SVGElement {
 	}
 
 }
+
+
+class SVGTitle {
+	constructor(gameCtrl, color, text) {
+		this.gameCtrl = gameCtrl;
+		this.graphic = this.gameCtrl.view.svg.graphic;
+		this.color = color;
+		this.text = text;
+
+		this.buildElem();
+		
+	}
+
+	buildElem() {
+		this.element = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+		this.element.innerHTML = this.text;
+		this.element.setAttribute('fill', this.color);
+		this.element.setAttribute('font-size', 180);
+		this.element.setAttribute('letter-spacing', -20);
+		this.graphic.appendChild(this.element);
+
+		var elemWidth = this.element.getBoundingClientRect().width;
+		var elemHeight = parseInt(window.getComputedStyle(this.element).fontSize);
+		
+		this.element.setAttribute('x', (this.gameCtrl.width - elemWidth) / 2);
+		this.element.setAttribute('y', (this.gameCtrl.height + elemHeight) / 2);
+		
+	}
+}

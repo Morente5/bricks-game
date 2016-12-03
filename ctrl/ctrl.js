@@ -1,7 +1,8 @@
 class GameCtrl {
-	constructor(width, height) {
+	constructor(width, height, level) {
 		this.width = width;
 		this.height = height;
+		this.level = level;
 
 		this.loadGame();
 		this.loadEvents();
@@ -11,7 +12,7 @@ class GameCtrl {
 		if (!!this.view) {
 			this.view.delete();
 		}
-		this.game = new Game(this.width, this.height);
+		this.game = new Game(this.width, this.height, this.level);
 		this.view = new View(this, this.width, this.height);
 
 		this.createElementCtrls();
@@ -63,10 +64,21 @@ class GameCtrl {
 			this.running = true;
 			
 			this.interval = setInterval( () => {
-				this.ballCtrl.move();
-				this.barCtrl.move();
-				this.game.detectAllCollisions();
-				this.brickCtrl.update();
+				if (!this.game.win && !this.game.lose) {
+					this.ballCtrl.move();
+					this.barCtrl.move();
+					this.game.detectAllCollisions();
+					this.brickCtrl.update();
+					this.game.checkWin();
+					if (!!this.game.win) {
+						this.stop();
+						this.title = new SVGTitle(this, '#40FF40', 'WIN');
+					}
+					if (!!this.game.lose) {
+						this.stop();
+						this.title = new SVGTitle(this, '#FF4040', 'LOSE');
+					}
+				}
 			}, 5);
 
 			return true;
@@ -86,7 +98,7 @@ class GameCtrl {
 
 
 class GameElementCtrl {
-	// Skeleton Class - No instantiate
+	// Skeleton Class - Don't instantiate
 	constructor(gameCtrl, gameElement) {
 		this.gameCtrl = gameCtrl;
 		this.gameElement = gameElement;

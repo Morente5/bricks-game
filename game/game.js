@@ -1,67 +1,30 @@
 class Game {
-	constructor(width, height) {
+	constructor(width, height, level) {
 		this.width = width;
 		this.height = height;
+		this.level = level;
+
+		this.win = false;
+		this.lose = false;
 
 		this.running = false;
 	}
 
 	createElements() {
-		var initialAngle = Math.random() * Math.PI/2 + 5*Math.PI/4; 
+		// Wall
+		this.wall = new Wall(this, this.width, this.height);
+
+		// Ball
+		var initialAngle = Math.random() * Math.PI/2 + 5*Math.PI/4;
 		this.ball = new Ball(this, this.width / 2, this.height - 50, 10, 2, initialAngle);
+
+		// Bar
 		this.bar = new Bar(this, 120, 20, 5);
 
-		var brickWidth = 40;
-		var brickHeight = 20;
-		var bricksLevel = [];
-		bricksLevel.push(
-			[0, 3, 4],
-			[0, 8, 4],
-			[1, 3, 4],
-			[1, 8, 4],
-			[2, 4, 2],
-			[2, 7, 2],
-			[3, 4, 2],
-			[3, 7, 2]
-		);
-		for (let i = 4; i <= 5; i++) {
-			for (let j = 3; j <= 8; j++) {
-				bricksLevel.push([i, j, 2]);
-			}
-		}
-		for (let i = 6; i <= 7; i++) {
-			for (let j = 2; j <= 9; j++) {
-				if (j == 4 || j == 7) {
-					bricksLevel.push([i, j, -1]);
-				} else {
-					bricksLevel.push([i, j, 2]);
-				}
-			}
-		}
-		for (let i = 8; i <= 10; i++) {
-			for (let j = 1; j <= 10; j++) {
-				bricksLevel.push([i, j, 2]);
-			}
-		}
-		for (let i = 11; i <= 13; i++) {
-			bricksLevel.push(
-				[i, 1, 2],
-				[i, 3, 1],
-				[i, 8, 1],
-				[i, 10, 2]
-			);
-		}
-		for (let j = 4; j <= 7; j++) {
-			bricksLevel.push([11, j, 1]);
-		}
-		bricksLevel.push(
-			[14, 4, 1],
-			[14, 7, 1],
-			[15, 4, 1],
-			[15, 7, 1]
-		);
-
-		this.bricks = bricksLevel.map(elem =>
+		// Bricks
+		var brickWidth = this.width / 12;
+		var brickHeight = this.height / 36;
+		this.bricksLevel = this.level.map(elem =>
 			new Brick(
 				this,
 				this.width / 2 + (-6 + elem[1]) * brickWidth,
@@ -72,21 +35,33 @@ class Game {
 				)
 			);
 
-		return {ball: this.ball, bar: this.bar, bricks: this.bricks};
+		return {
+			ball: this.ball,
+			bar: this.bar,
+			bricks: this.bricksLevel
+		};
 	}
 
 	detectAllCollisions() {
-		this.ball.detectWall(setNewDirection);
+		this.ball.detectCollision(this.wall, setNewDirection);
 		this.ball.detectCollision(this.bar, setNewDirection);
-		for (let i = 0; i < this.bricks.length; i++) {
-			this.ball.detectCollision(this.bricks[i], (ball, coll, brick, sides) => {
+		var coll = false;
+		var i = 0;
+		while (!coll && i < this.bricksLevel.length) {
+			coll = this.ball.detectCollision(this.bricksLevel[i], (ball, brick, coll, collision) => {
 				if (!!coll && brick.level !== 0) {
-					setNewDirection(ball, coll, brick, sides);
+					setNewDirection(ball, brick, coll, collision);
 					brick.break();
 				}
-				
 			});
+			i++;
 		}
+	}
+
+	checkWin() {
+		if (this.bricksLevel.every(elem => elem.level > 0)) {
+			this.win = true;
+		};
 	}
 
 }
@@ -135,7 +110,7 @@ class Velocity {
 }
 
 class GameElement {
-	// Skeleton Class - No instantiate
+	// Skeleton Class - Don't instantiate
 	constructor(game, x, y, speed, angle) {
 		this.game = game;
 		this.pos = new Position(x, y);
@@ -148,182 +123,194 @@ class GameElement {
 
 }
 
-class Wall {}
+
+class Wall {
+	constructor(game, width, height) {
+		this.width = width;
+		this.height = height;
+		this.pos = new Position(0, 0);
+	}
+}
+
 
 class Ball extends GameElement {
 	constructor(game, x, y, r, speed, angle) {
 		super(game, x, y, speed, angle);
 		this.r = r;
 	}
-
-	detectWall(callback) {
-		let rect = new Wall();
-		let sides = {
-			LEFT: {
-				collision: false,
-				newX: this.r
-			},
-			RIGHT: {
-				collision: false,
-				newX: this.game.width - this.r
-			},
-			TOP: {
-				collision: false,
-				newY: this.r
-			},
-			BOTTOM: {
-				collision: false,
-				newY: this.game.height - this.r
-			}
-		};
-
-		if (this.pos.x <= this.r) {  // LEFT
-			sides.LEFT.collision = true;
-		}
-		if (this.pos.x >= this.game.width - this.r) {  // RIGHT
-			sides.RIGHT.collision = true;
-		}
-		if (this.pos.y <= this.r) {  // TOP
-			sides.TOP.collision = true;
-		}
-		if (this.pos.y >= this.game.height - this.r) {  // BOTTOM
-			sides.BOTTOM.collision = true;
-		}
-
-		let coll = sides.BOTTOM.collision ||
-				   sides.TOP.collision ||
-				   sides.RIGHT.collision ||
-				   sides.LEFT.collision;
-		if (coll) {
-			callback(this, coll, rect, sides);
-		}
-	}
 	
 	detectCollision(rect, callback) {
-		let sides = {
-			LEFT: {
-				collision: false,
-				newX: rect.pos.x - this.r
-			},
-			RIGHT: {
-				collision: false,
-				newX: rect.pos.x + rect.width + this.r
-			},
-			TOP: {
-				collision: false,
-				newY: rect.pos.y - this.r
-			},
-			BOTTOM: {
-				collision: false,
-				newY: rect.pos.y + rect.height + this.r
-			}
-		};
+		let collision = {
+				'left': false,
+				'right': false,
+				'top': false,
+				'bottom': false
+			};
 
-		// Distance between centers
-		let dx = Math.abs(this.pos.x - rect.pos.x - rect.width / 2);
-		let dy = Math.abs(this.pos.y - rect.pos.y - rect.height / 2);
-		// Distance to the corner for case 3
-		let cx = dx - rect.width / 2;
-		let cy = dy - rect.height / 2;
-
-		// CASE 1: No collision
-		if (dx > (rect.width / 2 + this.r) ||
-			dy > (rect.height / 2 + this.r)) {	
-		}
-		// CASE 2: HORIZONTAL collision
-		else if (dx <= (rect.width / 2)) {
-			if (this.pos.y < rect.pos.y + rect.height / 2) {
-				sides.TOP.collision = true;
+		if (rect instanceof Wall) {
+			if (this.pos.x <= this.r) {  // LEFT
+				collision.left = true;
 			}
-			else {
-				sides.BOTTOM.collision = true;
+			else if (this.pos.x >= rect.width - this.r) {  // RIGHT
+				collision.right = true;
 			}
-		}
-		// CASE 2: VERTICAL collision
-		else if (dy <= (rect.height / 2)) {
-			if (this.pos.x < rect.pos.x + rect.width / 2) {
-				sides.LEFT.collision = true;
+			if (this.pos.y <= this.r) {  // TOP
+				collision.top = true;
 			}
-			else {
-				sides.RIGHT.collision = true;
-			}
-		}
-		// CASE 3: CORNER collision
-		else if (Math.hypot(cx, cy) <= this.r) {
-			if (this.pos.y < rect.pos.y + rect.height / 2) {
-				sides.TOP.collision = true;
-			}
-			else {
-				sides.BOTTOM.collision = true;
-			}
-			if (this.pos.x < rect.pos.x + rect.width / 2) {
-				sides.LEFT.collision = true;
-			}
-			else {
-				sides.RIGHT.collision = true;
+			else if (this.pos.y >= rect.height - this.r) {  // BOTTOM
+				collision.bottom = true;
+				this.game.lose = true;
 			}
 		}
 
-		let coll = sides.BOTTOM.collision ||
-				   sides.TOP.collision ||
-				   sides.RIGHT.collision ||
-				   sides.LEFT.collision;
-		if (coll) {
-			callback(this, coll, rect, sides);
+		if (rect instanceof Rectangle && rect.level != 0) {
+			// Distance between centers
+			let dx = Math.abs(this.pos.x - rect.pos.x - rect.width / 2);
+			let dy = Math.abs(this.pos.y - rect.pos.y - rect.height / 2);
+			// Distance to the corner for case 3
+			let cx = dx - rect.width / 2;
+			let cy = dy - rect.height / 2;
+	
+			// CASE 1: No collision
+			if (dx > (rect.width / 2 + this.r) ||
+				dy > (rect.height / 2 + this.r)) {	
+			}
+			// CASE 2: HORIZONTAL collision
+			else if (dx <= (rect.width / 2)) {
+				if (this.pos.y < rect.pos.y + rect.height / 2) {
+					collision.top = true;
+				}
+				else {
+					collision.bottom = true;
+				}
+			}
+			// CASE 2: VERTICAL collision
+			else if (dy <= (rect.height / 2)) {
+				if (this.pos.x < rect.pos.x + rect.width / 2) {
+					collision.left = true;
+				}
+				else {
+					collision.right = true;
+				}
+			}
+			// CASE 3: CORNER collision
+			else if (Math.hypot(cx, cy) <= this.r) {
+				if (this.pos.y < rect.pos.y + rect.height / 2) {
+					collision.top = true;
+				}
+				else {
+					collision.bottom = true;
+				}
+				if (this.pos.x < rect.pos.x + rect.width / 2) {
+					collision.left = true;
+				}
+				else {
+					collision.right = true;
+				}
+			}
 		}
+
+		let coll = collision.top ||
+				   collision.bottom ||
+				   collision.left ||
+				   collision.right;
+
+		if (!!coll) {
+			callback(this, rect, coll, collision);
+		}
+		return coll;
 	}
 
 }
 
-function setNewDirection(ball, coll, rect, sides) {
-	let ang = 0;
-	if (rect instanceof Wall) {
-		ang = Math.PI;
-	}
+function setNewDirection(ball, rect, coll, collision) {
 
-	if (rect instanceof Bar) {
+	if (rect instanceof Bar) {  // BAR
 		var bar = rect;
 		var varAng = (Math.random() - 0.5) * Math.PI/16;
-		if (sides.TOP.collision && sides.LEFT.collision) {
+
+		if (collision.top && collision.left) {
 			ball.vel.angle = 7*Math.PI/6 + varAng; 
 		}
-		else if (sides.TOP.collision && sides.RIGHT.collision) {
+		else if (collision.top && collision.right) {
 			ball.vel.angle = 11*Math.PI/6 + varAng; 
 		}
-		else if (sides.TOP.collision) {
-			ball.pos.y = sides.TOP.newY;
+		else if (collision.top) {  // Position-dependent angle
+			ball.pos.y = rect.pos.y - ball.r;
 			ball.vel.angle = 2*Math.PI/3 * (ball.pos.x - bar.pos.x) / (bar.width) + 7*Math.PI/6 + varAng;
 		}
-	}
-	else {
-		// Corners
-		if (sides.BOTTOM.collision && sides.RIGHT.collision) {
-			ball.vel.angle = Math.random() * Math.PI/4 + Math.PI/8 + ang; 
-		}
-		else if (sides.BOTTOM.collision && sides.LEFT.collision) {
-			ball.vel.angle = Math.random() * Math.PI/4 + 5*Math.PI/8 + ang; 
-		}
-		else if (sides.TOP.collision && sides.LEFT.collision) {
-			ball.vel.angle = Math.random() * Math.PI/4 + 9*Math.PI/8 + ang; 
-		}
-		else if (sides.TOP.collision && sides.RIGHT.collision) {
-			ball.vel.angle = Math.random() * Math.PI/4 + 13*Math.PI/8 + ang; 
-		}
-		// Sides
-		else if (sides.TOP.collision) {
-			ball.pos.y = sides.TOP.newY;
-			ball.vel.changeY();
-		}
-		else if (sides.BOTTOM.collision) {
-			ball.pos.y = sides.BOTTOM.newY;
-			ball.vel.changeY();
-		}
-		else if (sides.RIGHT.collision) {
-			ball.pos.x = sides.RIGHT.newX;
+		else if (collision.left) {
+			ball.pos.x = rect.pos.x - ball.r;
 			ball.vel.changeX();
 		}
-		else if (sides.LEFT.collision) {
-			ball.pos.x = sides.LEFT.newX;
+		else if (collision.right) {
+			ball.pos.x = rect.pos.x + rect.width + ball.r;
+			ball.vel.changeX();
+		}
+	}
+
+	else if (rect instanceof Brick) {  // BRICK
+		// Corners
+		if (collision.bottom && collision.right) {
+			ball.vel.angle = Math.random() * Math.PI/4 + Math.PI/8; 
+		}
+		else if (collision.bottom && collision.left) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 5*Math.PI/8; 
+		}
+		else if (collision.top && collision.left) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 9*Math.PI/8; 
+		}
+		else if (collision.top && collision.right) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 13*Math.PI/8; 
+		}
+		// Sides
+		else if (collision.top) {
+			ball.pos.y = rect.pos.y - ball.r;
+			ball.vel.changeY();
+		}
+		else if (collision.bottom) {
+			ball.pos.y = rect.pos.y + rect.height + ball.r;
+			ball.vel.changeY();
+		}
+		else if (collision.right) {
+			ball.pos.x = rect.pos.x + rect.width + ball.r;
+			ball.vel.changeX();
+		}
+		else if (collision.left) {
+			ball.pos.x = rect.pos.x - ball.r;
+			ball.vel.changeX();
+		}
+	}
+
+	else if (rect instanceof Wall) {  // WALL
+		// Corners
+		if (collision.bottom && collision.right) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 9*Math.PI/8; 
+		}
+		else if (collision.bottom && collision.left) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 13*Math.PI/8; 
+		}
+		else if (collision.top && collision.left) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 17*Math.PI/8; 
+		}
+		else if (collision.top && collision.right) {
+			ball.vel.angle = Math.random() * Math.PI/4 + 21*Math.PI/8; 
+		}
+		// Sides
+		else if (collision.top) {
+			ball.pos.y = ball.r;
+			ball.vel.changeY();
+		}
+		else if (collision.bottom) {
+			ball.pos.y = rect.height - ball.r;
+			ball.vel.changeY();
+		}
+		else if (collision.right) {
+			ball.pos.x = rect.width - ball.r;
+			ball.vel.changeX();
+		}
+		else if (collision.left) {
+			ball.pos.x = ball.r;
 			ball.vel.changeX();
 		}
 	}
