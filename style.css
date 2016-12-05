@@ -1,0 +1,15 @@
+body {
+	background-color: #263138;
+}
+
+#container {
+	
+}
+
+svg {
+	display: block;
+	margin: 0 auto;
+	border-style: solid;
+    border-width: 10px;
+    border-color: #78BBE6;
+}

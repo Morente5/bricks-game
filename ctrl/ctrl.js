@@ -205,7 +205,7 @@ class BrickCtrl extends GameElementCtrl {
 			let viewBrick = this.SVGElements[i];
 			switch(gameBrick.level) {
 				case -1:
-					viewBrick.color = '#b0b0b0';
+					viewBrick.color = '#78bbe6';
 					break;
 				case 0:
 					viewBrick.element.style.display = 'none';
